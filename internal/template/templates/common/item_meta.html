@@ -5,7 +5,7 @@
             <a href="{{ route "feedEntries" "feedID" .entry.Feed.ID }}" title="{{ .entry.Feed.SiteURL }}" data-feed-link="true">{{ truncate .entry.Feed.Title 35 }}</a>
         </li>
         <li class="item-meta-info-timestamp">
-            <time datetime="{{ isodate .entry.Date }}" title="{{ isodate .entry.Date }}">{{ elapsed .user.Timezone .entry.Date }}</time>
+            <time datetime="{{ isodate .entry.Date }}" title="{{ isodate .entry.Date }}" data-elapsed="true">{{ elapsed .user.Timezone .entry.Date }}</time>
         </li>
         {{ if and .user.ShowReadingTime (gt .entry.ReadingTime 0) -}}
         <li class="item-meta-info-reading-time">

@@ -66,7 +66,7 @@
                         <a href="{{ route "feedEntries" "feedID" .Feed.ID }}" title="{{ .Feed.SiteURL }}">{{ truncate .Feed.Title 35 }}</a>
                     </li>
                     <li class="item-meta-info-timestamp">
-                        <time datetime="{{ isodate .Date }}" title="{{ isodate .Date }}">{{ elapsed $.user.Timezone .Date }}</time>
+                        <time datetime="{{ isodate .Date }}" title="{{ isodate .Date }}" data-elapsed="true">{{ elapsed $.user.Timezone .Date }}</time>
                     </li>
                 </ul>
                 <ul class="item-meta-icons">

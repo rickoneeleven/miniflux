@@ -127,7 +127,7 @@ func csp(user *model.User, nonce string) string {
 		"media-src":                 "*",
 		"require-trusted-types-for": "'script'",
 		"script-src":                "'nonce-" + nonce + "' 'strict-dynamic'",
-		"style-src":                 "'nonce-" + nonce + "'",
+		"style-src":                 "'unsafe-inline'",
 		"trusted-types":             "html url",
 		"connect-src":               "'self'",
 	}

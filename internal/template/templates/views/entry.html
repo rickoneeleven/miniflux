@@ -212,9 +212,9 @@
         </div>
         <div class="entry-date">
             {{ if .user }}
-            <time datetime="{{ isodate .entry.Date }}" title="{{ isodate .entry.Date }}">{{ elapsed $.user.Timezone .entry.Date }}</time>
+            <time datetime="{{ isodate .entry.Date }}" title="{{ isodate .entry.Date }}" data-elapsed="true">{{ elapsed $.user.Timezone .entry.Date }}</time>
             {{ else }}
-            <time datetime="{{ isodate .entry.Date }}" title="{{ isodate .entry.Date }}">{{ elapsed "UTC" .entry.Date }}</time>
+            <time datetime="{{ isodate .entry.Date }}" title="{{ isodate .entry.Date }}" data-elapsed="true">{{ elapsed "UTC" .entry.Date }}</time>
             {{ end }}
             {{ if and .user.ShowReadingTime (gt .entry.ReadingTime 0) }}
             &centerdot;

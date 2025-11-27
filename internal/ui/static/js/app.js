@@ -4,13 +4,84 @@ const BOTTOM = -9999;
 
 // Simple Polyfill for browsers that don't support Trusted Types
 // See https://caniuse.com/?search=trusted%20types
-if (!window.trustedTypes || !trustedTypes.createPolicy) {
+const globalTrustedTypes = window.trustedTypes;
+if (!globalTrustedTypes || typeof globalTrustedTypes.createPolicy !== "function") {
     window.trustedTypes = {
-        createPolicy: (name, policy) => ({
-            createScriptURL: src => src,
-            createHTML: html => html,
-        })
+        // We intentionally ignore the provided policy and return a
+        // no-op implementation that simply passes values through.
+        createPolicy: () => ({
+            createScriptURL: (src) => src,
+            createHTML: (html) => html,
+        }),
     };
+}
+
+let trustedHTMLPolicy = null;
+if (window.trustedTypes && typeof window.trustedTypes.createPolicy === "function") {
+    try {
+        trustedHTMLPolicy = window.trustedTypes.createPolicy("html", {
+            createHTML: (value) => value,
+        });
+    } catch (error) {
+        // A policy with this name may already exist; ignore errors and
+        // fall back to using raw strings in environments that do not
+        // enforce TrustedHTML for DOMParser sinks.
+    }
+}
+
+/**
+ * Format an elapsed duration in milliseconds into a short English label.
+ *
+ * @param {number} elapsedMs
+ * @returns {string}
+ */
+function formatElapsedLabel(elapsedMs) {
+    const seconds = Math.floor(elapsedMs / 1000);
+    if (seconds < 60) return "just now";
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes === 1) return "1 minute ago";
+    if (minutes < 60) return minutes + " minutes ago";
+
+    const hours = Math.floor(minutes / 60);
+    if (hours === 1) return "1 hour ago";
+    if (hours < 24) return hours + " hours ago";
+
+    const days = Math.floor(hours / 24);
+    if (days === 1) return "1 day ago";
+    return days + " days ago";
+}
+
+/**
+ * Update all <time> elements that opt-in via data-elapsed="true" to show a
+ * client-side relative timestamp based on their datetime attribute.
+ */
+function updateElapsedTimeElements() {
+    const now = new Date();
+
+    document.querySelectorAll("time[data-elapsed='true']").forEach((timeElement) => {
+        const datetime = timeElement.dateTime || timeElement.getAttribute("datetime");
+        if (!datetime) return;
+
+        const date = new Date(datetime);
+        if (Number.isNaN(date.getTime())) return;
+
+        const elapsedMs = now.getTime() - date.getTime();
+        if (elapsedMs < 0) {
+            timeElement.textContent = "not yet";
+            return;
+        }
+
+        timeElement.textContent = formatElapsedLabel(elapsedMs);
+    });
+}
+
+/**
+ * Initialize periodic refresh of relative timestamps.
+ */
+function initializeElapsedTimeUpdater() {
+    updateElapsedTimeElements();
+    window.setInterval(updateElapsedTimeElements, 60000);
 }
 
 /**
@@ -1019,6 +1090,51 @@ function initializeUnreadSnapshotPolling() {
         timeElement.title = formatted;
     }
 
+    async function fetchAndInjectNewItems() {
+        try {
+            const response = await fetch(window.location.href, { cache: "no-store" });
+            if (!response.ok) return false;
+            const text = await response.text();
+            const parser = new DOMParser();
+            const htmlInput = trustedHTMLPolicy && typeof trustedHTMLPolicy.createHTML === "function"
+                ? trustedHTMLPolicy.createHTML(text)
+                : text;
+            const doc = parser.parseFromString(htmlInput, "text/html");
+
+            const newItems = doc.querySelectorAll(".items .item");
+            const itemsContainer = document.querySelector(".items");
+            if (!itemsContainer) return false;
+
+            const currentIds = new Set(Array.from(itemsContainer.querySelectorAll(".item")).map(el => el.dataset.id));
+            const fragment = document.createDocumentFragment();
+            let hasNew = false;
+
+            // newItems are assumed to be sorted (newest first).
+            // We iterate and append new items to the fragment.
+            newItems.forEach((item) => {
+                if (!currentIds.has(item.dataset.id)) {
+                    const importedNode = document.importNode(item, true);
+                    fragment.appendChild(importedNode);
+                    hasNew = true;
+                }
+            });
+
+            if (hasNew) {
+                // Prepend new items to the top of the list
+                itemsContainer.prepend(fragment);
+
+                // Re-initialize handlers for the newly added elements
+                initializeClickHandlers();
+                initializeMediaPlayerHandlers();
+            }
+            
+            return true;
+        } catch (e) {
+            console.error("Smart update failed", e);
+            return false;
+        }
+    }
+
     async function pollOnce() {
         try {
             const response = await fetch(snapshotUrl, { headers: { "Accept": "application/json" } });
@@ -1029,19 +1145,38 @@ function initializeUnreadSnapshotPolling() {
             const snapshot = await response.json();
 
             if (typeof snapshot.unread_count === "number") {
-                if (lastUnreadCount === null || snapshot.unread_count !== lastUnreadCount) {
-                    lastUnreadCount = snapshot.unread_count;
-                    updateUnreadCounters(lastUnreadCount);
-                }
+                const countChanged = lastUnreadCount !== null && snapshot.unread_count !== lastUnreadCount;
+                const newArticlesAvailable = lastUnreadCount !== null && snapshot.unread_count > lastUnreadCount;
 
-                if (snapshot.unread_count > 0) {
+                if (newArticlesAvailable) {
                     const itemsContainer = document.querySelector(".items");
-                    const hasItems = itemsContainer && itemsContainer.querySelector(".item");
                     const emptyAlert = document.querySelector('p.alert[role="alert"]');
 
-                    if (!hasItems && emptyAlert) {
+                    if (!itemsContainer && emptyAlert) {
                         window.location.reload();
+                        return; // Reloading, stop here
+                    } 
+                    
+                    if (itemsContainer) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        // Only try smart injection on first page
+                        if (!urlParams.has("offset") || urlParams.get("offset") === "0") {
+                            const injectionSuccess = await fetchAndInjectNewItems();
+                            if (injectionSuccess) {
+                                lastUnreadCount = snapshot.unread_count;
+                                updateUnreadCounters(lastUnreadCount);
+                            }
+                            // If injection failed, we don't update counter to avoid mismatch
+                        } else {
+                            // On other pages, just update the counter notification
+                            lastUnreadCount = snapshot.unread_count;
+                            updateUnreadCounters(lastUnreadCount);
+                        }
                     }
+                } else if (lastUnreadCount === null || countChanged) {
+                    // Just a counter update (initial load, or count decreased/stayed same)
+                    lastUnreadCount = snapshot.unread_count;
+                    updateUnreadCounters(lastUnreadCount);
                 }
             }
 
@@ -1152,11 +1287,15 @@ function handleMediaControlButtonClick(mediaPlayerButtonElement) {
  */
 function initializeMediaPlayerHandlers() {
     document.querySelectorAll("button[data-enclosure-action]").forEach((element) => {
+        if (element.dataset.mediaHandlersInitialized) return;
+        element.dataset.mediaHandlersInitialized = "true";
         element.addEventListener("click", () => handleMediaControlButtonClick(element));
     });
 
     // Set playback from the last position if available
     document.querySelectorAll("audio[data-last-position],video[data-last-position]").forEach((element) => {
+        if (element.dataset.mediaHandlersInitialized) return;
+        element.dataset.mediaHandlersInitialized = "true";
         if (element.dataset.lastPosition) {
             element.currentTime = element.dataset.lastPosition;
         }
@@ -1165,6 +1304,10 @@ function initializeMediaPlayerHandlers() {
 
     // Set playback speed from the data attribute if available
     document.querySelectorAll("audio[data-playback-rate],video[data-playback-rate]").forEach((element) => {
+        // No event listener here, just property setting, safe to repeat but efficient to skip
+        if (element.dataset.mediaPlaybackInitialized) return;
+        element.dataset.mediaPlaybackInitialized = "true";
+
         if (element.dataset.playbackRate) {
             element.playbackRate = element.dataset.playbackRate;
             if (element.dataset.enclosureId) {
@@ -1184,12 +1327,25 @@ function initializeServiceWorker() {
     if ("serviceWorker" in navigator) {
         const serviceWorkerURL = document.body.dataset.serviceWorkerUrl;
         if (serviceWorkerURL) {
-            const ttpolicy = trustedTypes.createPolicy('url', {createScriptURL: src => src});
-            navigator.serviceWorker.register(ttpolicy.createScriptURL(serviceWorkerURL), {
-                type: "module"
-            }).catch((error) => {
-                console.error("Service Worker registration failed:", error);
-            });
+            const tt = window.trustedTypes;
+            let scriptURL = serviceWorkerURL;
+
+            if (tt && typeof tt.createPolicy === "function") {
+                try {
+                    const policy = tt.createPolicy("url", { createScriptURL: (src) => src });
+                    scriptURL = policy.createScriptURL(serviceWorkerURL);
+                } catch (error) {
+                    // If Trusted Types policy creation fails for any reason,
+                    // fall back to using the raw URL to avoid breaking the app.
+                    console.error("Trusted Types policy creation failed:", error);
+                }
+            }
+
+            navigator.serviceWorker
+                .register(scriptURL, { type: "module" })
+                .catch((error) => {
+                    console.error("Service Worker registration failed:", error);
+                });
         }
     }
 
@@ -1375,6 +1531,7 @@ initializeKeyboardShortcuts();
 initializeTouchHandler();
 initializeClickHandlers();
 initializeUnreadSnapshotPolling();
+initializeElapsedTimeUpdater();
 initializeServiceWorker();
 
 // Reload the page if it was restored from the back-forward cache and mark entries as read is enabled.
