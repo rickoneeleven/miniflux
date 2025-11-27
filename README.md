@@ -1,148 +1,41 @@
-Miniflux 2
-==========
+# Miniflux at rss.pinescore.com
 
-Miniflux is a minimalist and opinionated feed reader.
-It's simple, fast, lightweight and super easy to install.
+DATETIME of last agent review: 27/11/2025 14:55 GMT
 
-Official website: <https://miniflux.app>
+Self-hosted Miniflux RSS reader backed by PostgreSQL, running behind Apache/Virtualmin at `https://rss.pinescore.com`.
 
-Features
---------
+## Quick Start
+- Prereqs: Go 1.24+ (we use 1.25.x from `/usr/local/go`) and PostgreSQL 15+.
+- Setup: `make miniflux` (builds the `miniflux` binary from the repo root).
+- Run (local dev): `DATABASE_URL=postgres://miniflux:<password>@localhost/miniflux?sslmode=disable RUN_MIGRATIONS=1 go run main.go`.
 
-### Feed Reader
+## Development
+- Test: `make test` (runs Go tests with race detection).
+- Lint/format: `make lint` (go vet + gofmt + golangci-lint if installed).
+- Useful: `make integration-test` (starts a temporary instance and runs API integration tests against PostgreSQL).
 
-- Supported feed formats: Atom 0.3/1.0, RSS 1.0/2.0, and JSON Feed 1.0/1.1.
-- [OPML](https://en.wikipedia.org/wiki/OPML) file import/export and URL import.
-- Supports multiple attachments (podcasts, videos, music, and images enclosures).
-- Plays videos from YouTube directly inside Miniflux.
-- Organizes articles using categories and bookmarks.
-- Share individual articles publicly.
-- Fetches website icons (favicons).
-- Saves articles to third-party services.
-- Provides full-text search (powered by Postgres).
-- Available in 20 languages: Portuguese (Brazilian), Chinese (Simplified and Traditional), Dutch, English (US), Finnish, French, German, Greek, Hindi, Indonesian, Italian, Japanese, Polish, Romanian, Russian, Taiwanese POJ, Ukrainian, Spanish, and Turkish.
+## Architecture
+- `main.go` and `internal/cli` — CLI entrypoint that parses flags, loads configuration, and starts the HTTP server and background workers.
+- `internal/http` — HTTP handlers, routing, authentication, and UI endpoints.
+- `internal/database` and `internal/storage` — PostgreSQL access and persistence helpers.
+- `internal/reader`, `internal/worker`, `internal/mediaproxy` — feed fetching, background jobs, and media proxying.
+- `client` and `internal/template/templates` — front-end assets and HTML templates bundled into the binary.
 
-### Privacy and Security
+## Configuration
+- `DATABASE_URL` (required) — PostgreSQL connection string (`postgres://miniflux:<password>@localhost/miniflux?sslmode=disable` on this host).
+- `RUN_MIGRATIONS` (recommended on first run) — when `1`, applies database migrations automatically.
+- `LISTEN_ADDR` — bind address for the HTTP server (production uses `127.0.0.1:8180` behind Apache).
+- `BASE_URL` — external URL Miniflux should use when generating links (`https://rss.pinescore.com` here).
+- `CREATE_ADMIN`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` — optional one-time bootstrap of the initial admin account.
 
-- Removes pixel trackers.
-- Strips tracking parameters from URLs (e.g., `utm_source`, `utm_medium`, `utm_campaign`, `fbclid`, etc.).
-- Retrieves original links when feeds are sourced from FeedBurner.
-- Opens external links with attributes `rel="noopener noreferrer" referrerpolicy="no-referrer"` for improved security.
-- Implements the HTTP header `Referrer-Policy: no-referrer` to prevent referrer leakage.
-- Provides a media proxy to avoid tracking and resolve mixed content warnings when using HTTPS.
-- Plays YouTube videos via the privacy-focused domain `youtube-nocookie.com`.
-- Supports alternative YouTube video players such as [Invidious](https://invidio.us).
-- Blocks external JavaScript to prevent tracking and enhance security.
-- Sanitizes external content before rendering it.
-- Enforces a [Content Security](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) and a [Trusted Types Policy](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) to only application JavaScript and blocks inline scripts and styles. 
+## Troubleshooting
+- HTTP server fails with “bind: address already in use” → update `LISTEN_ADDR` to a free port or stop the conflicting service, then restart Miniflux.
+- Login keeps failing for the admin user → reset the password via the UI and ensure `CREATE_ADMIN=0` so the environment is not overwriting it.
+- Service will not start under systemd → run `sudo systemctl status miniflux` and `sudo journalctl -u miniflux` to inspect logs and check for database or config errors.
+- Database-related errors (e.g. “database does not exist” or auth failures) → confirm `DATABASE_URL` matches an existing PostgreSQL database and user.
 
-### Bot Protection Bypass Mechanisms
+## Deployment
+- This host runs Miniflux as a `miniflux` systemd service behind Apache/Virtualmin; see `ops/deployment.md` for PostgreSQL, systemd, and vhost configuration used on `rss.pinescore.com`.
 
-- Optionally disable HTTP/2 to mitigate fingerprinting.
-- Allows configuration of a custom user agent.
-- Supports adding custom cookies for specific use cases.
-- Enables the use of proxies for enhanced privacy or bypassing restrictions.
-
-### Content Manipulation
-
-- Fetches the original article and extracts only the relevant content using a local Readability parser.
-- Allows custom scraper rules based on <abbr title="Cascading Style Sheets">CSS</abbr> selectors.
-- Supports custom rewriting rules for content manipulation.
-- Provides a regex filter to include or exclude articles based on specific patterns.
-- Optionally permits self-signed or invalid certificates (disabled by default).
-- Scrapes YouTube's website to retrieve video duration as read time or uses the YouTube API (disabled by default).
-
-### User Interface
-
-- Optimized stylesheet for readability.
-- Responsive design that adapts seamlessly to desktop, tablet, and mobile devices.
-- Minimalistic and distraction-free user interface.
-- No requirement to download an app from Apple App Store or Google Play Store.
-- Can be added directly to the home screen for quick access.
-- Supports a wide range of keyboard shortcuts for efficient navigation.
-- Optional touch gesture support for navigation on mobile devices.
-- Custom stylesheets and JavaScript to personalize the user interface to your preferences.
-- Themes:
-    - Light (Sans-Serif)
-    - Light (Serif)
-    - Dark (Sans-Serif)
-    - Dark (Serif)
-    - System (Sans-Serif) – Automatically switches between Dark and Light themes based on system preferences.
-    - System (Serif)
-
-### Integrations
-
-- 25+ integrations with third-party services: [Apprise](https://github.com/caronc/apprise), [Betula](https://sr.ht/~bouncepaw/betula/), [Cubox](https://cubox.cc/), [Discord](https://discord.com/), [Espial](https://github.com/jonschoning/espial), [Instapaper](https://www.instapaper.com/), [LinkAce](https://www.linkace.org/), [Linkding](https://github.com/sissbruecker/linkding), [LinkTaco](https://linktaco.com), [LinkWarden](https://linkwarden.app/), [Matrix](https://matrix.org), [Notion](https://www.notion.com/), [Ntfy](https://ntfy.sh/), [Nunux Keeper](https://keeper.nunux.org/), [Pinboard](https://pinboard.in/), [Pushover](https://pushover.net), [RainDrop](https://raindrop.io/), [Readeck](https://readeck.org/en/), [Readwise Reader](https://readwise.io/read), [RssBridge](https://rss-bridge.org/), [Shaarli](https://github.com/shaarli/Shaarli), [Shiori](https://github.com/go-shiori/shiori), [Slack](https://slack.com/), [Telegram](https://telegram.org), [Wallabag](https://www.wallabag.org/), etc.
-- Bookmarklet for subscribing to websites directly from any web browser.
-- Webhooks for real-time notifications or custom integrations.
-- Compatibility with existing mobile applications using the Fever or Google Reader API.
-- REST API with client libraries available in [Go](https://github.com/miniflux/v2/tree/main/client) and [Python](https://github.com/miniflux/python-client).
-
-### Authentication
-
-- Local username and password.
-- Passkeys ([WebAuthn](https://en.wikipedia.org/wiki/WebAuthn)).
-- Google (OAuth2).
-- Generic OpenID Connect.
-- Reverse-Proxy authentication.
-
-### Technical Stuff
-
-- Written in [Go (Golang)](https://golang.org/).
-- Single binary compiled statically without dependency.
-- Works only with [PostgreSQL](https://www.postgresql.org/).
-- Does not use any ORM or any complicated frameworks.
-- Uses modern vanilla JavaScript only when necessary.
-- All static files are bundled into the application binary using the Go `embed` package.
-- Supports the Systemd `sd_notify` protocol for process monitoring.
-- Configures HTTPS automatically with Let's Encrypt.
-- Allows the use of custom <abbr title="Secure Sockets Layer">SSL</abbr> certificates.
-- Supports [HTTP/2](https://en.wikipedia.org/wiki/HTTP/2) when TLS is enabled.
-- Updates feeds in the background using an internal scheduler or a traditional cron job.
-- Uses native lazy loading for images and iframes.
-- Compatible only with modern browsers.
-- Adheres to the [Twelve-Factor App](https://12factor.net/) methodology.
-- Provides official Debian/RPM packages and pre-built binaries.
-- Publishes a Docker image to Docker Hub, GitHub Registry, and Quay.io Registry, with ARM architecture support.
-- Uses a limited amount of third-party go dependencies
-- Has a comprehensive testsuite, with both unit tests and integration tests.
-- Only uses a couple of MB of memory and a negligible amount of CPU, even with several hundreds of feeds.
-- Respects/sends Last-Modified, If-Modified-Since, If-None-Match, Cache-Control, Expires and ETags headers, and has a default polling interval of 1h.
-
-Documentation
--------------
-
-The Miniflux documentation is available here: <https://miniflux.app/docs/> ([Man page](https://miniflux.app/miniflux.1.html))
-
-- [Opinionated?](https://miniflux.app/opinionated.html)
-- [Features](https://miniflux.app/features.html)
-- [Requirements](https://miniflux.app/docs/requirements.html)
-- [Installation Instructions](https://miniflux.app/docs/installation.html)
-- [Upgrading to a New Version](https://miniflux.app/docs/upgrade.html)
-- [Configuration](https://miniflux.app/docs/configuration.html)
-- [Command Line Usage](https://miniflux.app/docs/cli.html)
-- [User Interface Usage](https://miniflux.app/docs/ui.html)
-- [Keyboard Shortcuts](https://miniflux.app/docs/keyboard_shortcuts.html)
-- [Integration with External Services](https://miniflux.app/docs/#integrations)
-- [Rewrite and Scraper Rules](https://miniflux.app/docs/rules.html)
-- [API Reference](https://miniflux.app/docs/api.html)
-- [Development](https://miniflux.app/docs/development.html)
-- [Internationalization](https://miniflux.app/docs/i18n.html)
-- [Frequently Asked Questions](https://miniflux.app/faq.html)
-
-Screenshots
------------
-
-Default theme:
-
-![Default theme](https://miniflux.app/images/overview.png)
-
-Dark theme when using keyboard navigation:
-
-![Dark theme](https://miniflux.app/images/item-selection-black-theme.png)
-
-Credits
--------
-
-- Authors: Frédéric Guillot - [List of contributors](https://github.com/miniflux/v2/graphs/contributors)
-- Distributed under Apache 2.0 License
+## Links
+- Miniflux upstream documentation — https://miniflux.app/docs/
