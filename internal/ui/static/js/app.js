@@ -1029,21 +1029,18 @@ function initializeUnreadSnapshotPolling() {
             const snapshot = await response.json();
 
             if (typeof snapshot.unread_count === "number") {
-                const previousUnreadCount = lastUnreadCount;
-
                 if (lastUnreadCount === null || snapshot.unread_count !== lastUnreadCount) {
                     lastUnreadCount = snapshot.unread_count;
                     updateUnreadCounters(lastUnreadCount);
+                }
 
-                    if (previousUnreadCount !== null &&
-                        snapshot.unread_count > previousUnreadCount) {
-                        const itemsContainer = document.querySelector(".items");
-                        const hasItems = itemsContainer && itemsContainer.querySelector(".item");
-                        const emptyAlert = document.querySelector('p.alert[role="alert"]');
+                if (snapshot.unread_count > 0) {
+                    const itemsContainer = document.querySelector(".items");
+                    const hasItems = itemsContainer && itemsContainer.querySelector(".item");
+                    const emptyAlert = document.querySelector('p.alert[role="alert"]');
 
-                        if (!hasItems && emptyAlert) {
-                            window.location.reload();
-                        }
+                    if (!hasItems && emptyAlert) {
+                        window.location.reload();
                     }
                 }
             }
