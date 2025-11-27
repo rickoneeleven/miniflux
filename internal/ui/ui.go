@@ -44,6 +44,7 @@ func Serve(router *mux.Router, store *storage.Storage, pool *worker.Pool) {
 	// Unread page.
 	uiRouter.HandleFunc("/mark-all-as-read", handler.markAllAsRead).Name("markAllAsRead").Methods(http.MethodPost)
 	uiRouter.HandleFunc("/unread", handler.showUnreadPage).Name("unread").Methods(http.MethodGet)
+	uiRouter.HandleFunc("/unread/snapshot", handler.unreadSnapshot).Name("unreadSnapshot").Methods(http.MethodGet)
 	uiRouter.HandleFunc("/unread/entry/{entryID}", handler.showUnreadEntryPage).Name("unreadEntry").Methods(http.MethodGet)
 
 	// History pages.

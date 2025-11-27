@@ -132,8 +132,10 @@ func (f *Feed) ScheduleNextCheck(weeklyCount int, refreshDelay time.Duration) ti
 		}
 	}
 
-	// Use the RSS TTL field, Retry-After, Cache-Control or Expires HTTP headers if defined.
-	interval = max(interval, refreshDelay)
+	if config.Opts.PollingRespectFeedTTL() {
+		// Use the RSS TTL field, Retry-After, Cache-Control or Expires HTTP headers if defined.
+		interval = max(interval, refreshDelay)
+	}
 
 	// Limit the max interval value for misconfigured feeds.
 	switch config.Opts.PollingScheduler() {

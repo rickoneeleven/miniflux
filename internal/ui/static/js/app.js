@@ -961,6 +961,107 @@ function handleConfirmationMessage(linkElement, callback) {
 }
 
 /**
+ * Initialize unread snapshot polling on the unread page.
+ *
+ * This keeps the unread counters and the "Last fetch" indicator in sync with
+ * the backend without requiring a full page reload.
+ */
+function initializeUnreadSnapshotPolling() {
+    const snapshotUrl = document.body.dataset.unreadSnapshotUrl;
+    if (!snapshotUrl) return;
+
+    if (!window.location.pathname.endsWith("/unread")) {
+        return;
+    }
+
+    let lastUnreadCount = null;
+    let lastGlobalFeedCheck = null;
+
+    function updateUnreadCounters(unreadCount) {
+        document.querySelectorAll("span.unread-counter").forEach((element) => {
+            element.textContent = unreadCount.toString();
+        });
+
+        const title = document.title;
+        const match = title.match(/^(.*?)(\s*\(\d+\))?(\s*-\s*.*)?$/);
+        if (!match) return;
+
+        const base = match[1].trimEnd();
+        const suffix = match[3] || "";
+        let newTitle = base;
+
+        if (unreadCount > 0) {
+            newTitle += " (" + unreadCount + ")";
+        }
+
+        if (suffix) {
+            newTitle += suffix;
+        }
+
+        document.title = newTitle;
+    }
+
+    function updateLastFetch(timestamp) {
+        if (!timestamp) return;
+
+        const container = document.getElementById("last-global-fetch");
+        if (!container) return;
+
+        const timeElement = container.querySelector("time");
+        if (!timeElement) return;
+
+        timeElement.dateTime = timestamp;
+
+        const date = new Date(timestamp);
+        const formatted = Number.isNaN(date.getTime()) ? timestamp : date.toLocaleString();
+
+        timeElement.textContent = formatted;
+        timeElement.title = formatted;
+    }
+
+    async function pollOnce() {
+        try {
+            const response = await fetch(snapshotUrl, { headers: { "Accept": "application/json" } });
+            if (!response.ok) {
+                return;
+            }
+
+            const snapshot = await response.json();
+
+            if (typeof snapshot.unread_count === "number") {
+                const previousUnreadCount = lastUnreadCount;
+
+                if (lastUnreadCount === null || snapshot.unread_count !== lastUnreadCount) {
+                    lastUnreadCount = snapshot.unread_count;
+                    updateUnreadCounters(lastUnreadCount);
+
+                    if (previousUnreadCount !== null &&
+                        snapshot.unread_count > previousUnreadCount) {
+                        const itemsContainer = document.querySelector(".items");
+                        const hasItems = itemsContainer && itemsContainer.querySelector(".item");
+                        const emptyAlert = document.querySelector('p.alert[role="alert"]');
+
+                        if (!hasItems && emptyAlert) {
+                            window.location.reload();
+                        }
+                    }
+                }
+            }
+
+            if (snapshot.last_global_feed_check && snapshot.last_global_feed_check !== lastGlobalFeedCheck) {
+                lastGlobalFeedCheck = snapshot.last_global_feed_check;
+                updateLastFetch(lastGlobalFeedCheck);
+            }
+        } catch (error) {
+            // Ignore polling errors to avoid breaking the UI.
+        }
+    }
+
+    pollOnce();
+    setInterval(pollOnce, 10000);
+}
+
+/**
  * Check if the player is actually playing a media
  *
  * @param mediaElement the player element itself
@@ -1276,6 +1377,7 @@ initializeWebAuthn();
 initializeKeyboardShortcuts();
 initializeTouchHandler();
 initializeClickHandlers();
+initializeUnreadSnapshotPolling();
 initializeServiceWorker();
 
 // Reload the page if it was restored from the back-forward cache and mark entries as read is enabled.

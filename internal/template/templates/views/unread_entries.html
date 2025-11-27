@@ -7,6 +7,14 @@
         <span aria-hidden="true">(<span class="unread-counter">{{ .countUnread }}</span>)</span>
     </h1>
     <span id="page-header-title-count" class="sr-only">{{ plural "page.unread_entry_count" .countUnread .countUnread }}</span>
+    {{ if .hasLastGlobalFeedCheck }}
+    <p id="last-global-fetch">
+        Last fetch:
+        <time datetime="{{ isodate .lastGlobalFeedCheck }}" title="{{ isodate .lastGlobalFeedCheck }}">
+            {{ isodate .lastGlobalFeedCheck }} ({{ elapsed .user.Timezone .lastGlobalFeedCheck }})
+        </time>
+    </p>
+    {{ end }}
     {{ if .entries }}
     <nav aria-label="{{ t "page.unread.title" }} {{ t "menu.title" }}">
         <ul>

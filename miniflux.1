@@ -486,11 +486,11 @@ Set to 1 to authorize OAuth2 user creation\&.
 Disabled by default\&.
 .TP
 .B POLLING_FREQUENCY
-Interval for the background job scheduler.
+Interval (in seconds) for the background job scheduler.
 .br
 Determines how often a batch of feeds is selected for refresh, based on their last refresh time\&.
 .br
-Default is 60 minutes\&.
+Default is 60 seconds\&.
 .TP
 .B POLLING_LIMIT_PER_HOST
 Limits the number of concurrent requests to the same hostname when polling feeds.

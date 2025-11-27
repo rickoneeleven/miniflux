@@ -473,9 +473,9 @@ func NewConfigOptions() *configOptions {
 				ValueType:       boolType,
 			},
 			"POLLING_FREQUENCY": {
-				ParsedDuration: 60 * time.Minute,
+				ParsedDuration: 60 * time.Second,
 				RawValue:       "60",
-				ValueType:      minuteType,
+				ValueType:      secondType,
 				Validator: func(rawValue string) error {
 					return validateGreaterOrEqualThan(rawValue, 1)
 				},
@@ -503,6 +503,11 @@ func NewConfigOptions() *configOptions {
 				Validator: func(rawValue string) error {
 					return validateChoices(rawValue, []string{"round_robin", "entry_frequency"})
 				},
+			},
+			"POLLING_RESPECT_FEED_TTL": {
+				ParsedBoolValue: true,
+				RawValue:        "1",
+				ValueType:       boolType,
 			},
 			"PORT": {
 				ParsedStringValue: "",
@@ -900,6 +905,10 @@ func (c *configOptions) PollingParsingErrorLimit() int {
 
 func (c *configOptions) PollingScheduler() string {
 	return c.options["POLLING_SCHEDULER"].ParsedStringValue
+}
+
+func (c *configOptions) PollingRespectFeedTTL() bool {
+	return c.options["POLLING_RESPECT_FEED_TTL"].ParsedBoolValue
 }
 
 func (c *configOptions) Port() string {

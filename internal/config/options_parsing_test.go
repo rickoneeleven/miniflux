@@ -1507,16 +1507,32 @@ func TestMetricsRefreshIntervalOptionParsing(t *testing.T) {
 func TestPollingFrequencyOptionParsing(t *testing.T) {
 	configParser := NewConfigParser()
 
-	if configParser.options.PollingFrequency().Minutes() != 60 {
-		t.Fatalf("Expected POLLING_FREQUENCY to be 60 minutes by default")
+	if configParser.options.PollingFrequency().Seconds() != 60 {
+		t.Fatalf("Expected POLLING_FREQUENCY to be 60 seconds by default")
 	}
 
 	if err := configParser.parseLines([]string{"POLLING_FREQUENCY=30"}); err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	if configParser.options.PollingFrequency().Minutes() != 30 {
-		t.Fatalf("Expected POLLING_FREQUENCY to be 30 minutes")
+	if configParser.options.PollingFrequency().Seconds() != 30 {
+		t.Fatalf("Expected POLLING_FREQUENCY to be 30 seconds")
+	}
+}
+
+func TestPollingRespectFeedTTLOptionParsing(t *testing.T) {
+	configParser := NewConfigParser()
+
+	if !configParser.options.PollingRespectFeedTTL() {
+		t.Fatalf("Expected POLLING_RESPECT_FEED_TTL to be true by default")
+	}
+
+	if err := configParser.parseLines([]string{"POLLING_RESPECT_FEED_TTL=0"}); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	if configParser.options.PollingRespectFeedTTL() {
+		t.Fatalf("Expected POLLING_RESPECT_FEED_TTL to be false after override")
 	}
 }
 

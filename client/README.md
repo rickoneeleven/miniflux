@@ -1,6 +1,8 @@
 Miniflux API Client
 ===================
 
+DATETIME of last agent review: 27/11/2025 16:30 GMT
+
 [![PkgGoDev](https://pkg.go.dev/badge/miniflux.app/v2/client)](https://pkg.go.dev/miniflux.app/v2/client)
 
 Client library for Miniflux REST API.

@@ -1,11 +1,11 @@
 # Miniflux deployment: rss.pinescore.com
 
-DATETIME of last agent review: 27/11/2025 14:55 GMT
+DATETIME of last agent review: 27/11/2025 16:45 GMT
 
 ## Host and runtime
 - OS: Debian 12 (bookworm) with Virtualmin/Apache managing `rss.pinescore.com`.
 - Application code lives in `/home/loopnova/domains/rss.pinescore.com/public_html` and tracks `main` from `git@github.com:rickoneeleven/miniflux.git`.
-- Go toolchain: `/usr/local/go` (go1.25.x) installed from upstream tarball; Debian `golang-go` (go1.19) is present but not used for builds.
+- Go toolchain: `/usr/local/go` (go1.25.x) installed from upstream tarball; Debian `golang-go` (go1.19) is present but must not be used for Miniflux builds or tests.
 
 ## PostgreSQL
 - Version: PostgreSQL 15 (`postgresql`/`postgresql-client` from Debian packages).
@@ -16,7 +16,7 @@ DATETIME of last agent review: 27/11/2025 14:55 GMT
 
 ## Application binary
 - Source directory: `/home/loopnova/domains/rss.pinescore.com/public_html`.
-- Build command (run with `/usr/local/go/bin` first on `PATH`): `make miniflux`.
+- Build command (always with `/usr/local/go/bin` first on `PATH`): `PATH=/usr/local/go/bin:$PATH make miniflux`.
 - Installed binary: `/usr/local/bin/miniflux` (copied from the repo root after build).
 - To rebuild and redeploy on this host:
   - `cd /home/loopnova/domains/rss.pinescore.com/public_html`
@@ -36,10 +36,22 @@ DATETIME of last agent review: 27/11/2025 14:55 GMT
   - `ADMIN_PASSWORD=<initial admin password>`
   - `ADMIN_EMAIL=admin@rss.pinescore.com`
   - `BASE_URL=https://rss.pinescore.com`
+  - `POLLING_FREQUENCY=10`
+  - `SCHEDULER_ROUND_ROBIN_MIN_INTERVAL=1`
+  - `POLLING_LIMIT_PER_HOST=2`
+  - `POLLING_RESPECT_FEED_TTL=0`
 - Recommended hardening after first login:
   - Change the admin password in the UI (already done).
   - Edit `/etc/miniflux.conf` to remove `ADMIN_PASSWORD` and set `CREATE_ADMIN=0`.
   - `sudo systemctl restart miniflux`.
+
+### Feed polling behaviour (rss.pinescore.com)
+- The instance is configured for an aggressive near-real-time polling cadence for all feeds:
+  - Scheduler interval: `POLLING_FREQUENCY=10` (scheduler tick every 10 seconds; in this fork `POLLING_FREQUENCY` is interpreted in seconds, not minutes).
+  - Per-feed minimum interval: `SCHEDULER_ROUND_ROBIN_MIN_INTERVAL=1` (each feed scheduled at least once per minute).
+  - Host protection: `POLLING_LIMIT_PER_HOST=2` (at most 2 feeds per host per batch).
+  - TTL override: `POLLING_RESPECT_FEED_TTL=0` (ignores RSS TTL, Retry-After, Cache-Control, and Expires when computing `next_check_at`).
+- Operational effect: feeds are refreshed on a roughly one-minute cadence in practice, with only a small amount of jitter relative to the UI countdown; this is intentional for this single-user deployment and may increase load on upstream providers compared to upstream defaults.
 
 ## Systemd service
 - Unit file: `/etc/systemd/system/miniflux.service` (copied from `packaging/systemd/miniflux.service` and adjusted).
@@ -77,4 +89,3 @@ DATETIME of last agent review: 27/11/2025 14:55 GMT
   - Check logs: `sudo journalctl -u miniflux`.
   - Verify listener: `ss -tlnp | grep 8180`.
   - Ensure PostgreSQL is healthy: `sudo systemctl status postgresql`.
-

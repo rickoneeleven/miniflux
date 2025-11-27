@@ -1,18 +1,18 @@
 # Miniflux at rss.pinescore.com
 
-DATETIME of last agent review: 27/11/2025 14:55 GMT
+DATETIME of last agent review: 27/11/2025 16:45 GMT
 
 Self-hosted Miniflux RSS reader backed by PostgreSQL, running behind Apache/Virtualmin at `https://rss.pinescore.com`.
 
 ## Quick Start
-- Prereqs: Go 1.24+ (we use 1.25.x from `/usr/local/go`) and PostgreSQL 15+.
-- Setup: `make miniflux` (builds the `miniflux` binary from the repo root).
-- Run (local dev): `DATABASE_URL=postgres://miniflux:<password>@localhost/miniflux?sslmode=disable RUN_MIGRATIONS=1 go run main.go`.
+- Prereqs: Go 1.25.x from `/usr/local/go` (Debian `golang-go` 1.19 is installed but must not be used) and PostgreSQL 15+.
+- Setup: `PATH=/usr/local/go/bin:$PATH make miniflux` (builds the `miniflux` binary from the repo root with the correct Go toolchain).
+- Run (local dev): `PATH=/usr/local/go/bin:$PATH DATABASE_URL=postgres://miniflux:<password>@localhost/miniflux?sslmode=disable RUN_MIGRATIONS=1 go run main.go`.
 
 ## Development
-- Test: `make test` (runs Go tests with race detection).
-- Lint/format: `make lint` (go vet + gofmt + golangci-lint if installed).
-- Useful: `make integration-test` (starts a temporary instance and runs API integration tests against PostgreSQL).
+- Test: `PATH=/usr/local/go/bin:$PATH make test` (runs Go tests with the correct Go version and race detection).
+- Lint/format: `PATH=/usr/local/go/bin:$PATH make lint` (go vet + gofmt + golangci-lint if installed).
+- Useful: `PATH=/usr/local/go/bin:$PATH make integration-test` (starts a temporary instance and runs API integration tests against PostgreSQL).
 
 ## Architecture
 - `main.go` and `internal/cli` — CLI entrypoint that parses flags, loads configuration, and starts the HTTP server and background workers.
@@ -27,6 +27,7 @@ Self-hosted Miniflux RSS reader backed by PostgreSQL, running behind Apache/Virt
 - `LISTEN_ADDR` — bind address for the HTTP server (production uses `127.0.0.1:8180` behind Apache).
 - `BASE_URL` — external URL Miniflux should use when generating links (`https://rss.pinescore.com` here).
 - `CREATE_ADMIN`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` — optional one-time bootstrap of the initial admin account.
+ - Feed polling on this instance is configured for an aggressive near-real-time cadence with `POLLING_FREQUENCY=10` (seconds), `SCHEDULER_ROUND_ROBIN_MIN_INTERVAL=1` (minute), `POLLING_LIMIT_PER_HOST=2`, and `POLLING_RESPECT_FEED_TTL=0`. With this configuration the background scheduler wakes up roughly every 10 seconds and refreshes feeds on an approximately one-minute cadence in practice.
 
 ## Troubleshooting
 - HTTP server fails with “bind: address already in use” → update `LISTEN_ADDR` to a free port or stop the conflicting service, then restart Miniflux.
