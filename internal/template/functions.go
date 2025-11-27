@@ -127,18 +127,14 @@ func csp(user *model.User, nonce string) string {
 		"media-src":                 "*",
 		"require-trusted-types-for": "'script'",
 		"script-src":                "'nonce-" + nonce + "' 'strict-dynamic'",
-		"style-src":                 "'unsafe-inline'",
+		"style-src":                 "'self' 'unsafe-inline'",
 		"trusted-types":             "html url",
 		"connect-src":               "'self'",
 	}
 
-	if user != nil {
-		if user.ExternalFontHosts != "" {
-			policies["font-src"] = user.ExternalFontHosts
-			if user.Stylesheet != "" {
-				policies["style-src"] += " " + user.ExternalFontHosts
-			}
-		}
+	if user != nil && user.ExternalFontHosts != "" {
+		policies["font-src"] = user.ExternalFontHosts
+		policies["style-src"] += " " + user.ExternalFontHosts
 	}
 
 	var policy strings.Builder
