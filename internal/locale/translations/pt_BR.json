@@ -408,6 +408,7 @@
     "menu.logout": "Encerrar sessão",
     "menu.mark_all_as_read": "Marcar todos como lido",
     "menu.mark_page_as_read": "Marcar essa página como lida",
+    "menu.mark_next_as_read": "Marcar o próximo como lido",
     "menu.preferences": "Preferências",
     "menu.refresh_all_feeds": "Atualizar todas as fontes",
     "menu.refresh_feed": "Atualizar",

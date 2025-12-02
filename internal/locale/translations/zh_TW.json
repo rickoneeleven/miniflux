@@ -405,6 +405,7 @@
     "menu.logout": "登出",
     "menu.mark_all_as_read": "全部標為已讀",
     "menu.mark_page_as_read": "將此頁面標記為已讀",
+    "menu.mark_next_as_read": "將下一則標記為已讀",
     "menu.preferences": "設定",
     "menu.refresh_all_feeds": "在背景更新所有 Feed",
     "menu.refresh_feed": "更新",

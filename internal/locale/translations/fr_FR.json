@@ -408,6 +408,7 @@
     "menu.logout": "Se déconnecter",
     "menu.mark_all_as_read": "Tout marquer comme lu",
     "menu.mark_page_as_read": "Marquer cette page comme lue",
+    "menu.mark_next_as_read": "Marquer le prochain comme lu",
     "menu.preferences": "Préférences",
     "menu.refresh_all_feeds": "Actualiser les abonnements en arrière-plan",
     "menu.refresh_feed": "Actualiser",

@@ -408,6 +408,7 @@
     "menu.logout": "Uitloggen",
     "menu.mark_all_as_read": "Markeer alles als gelezen",
     "menu.mark_page_as_read": "Markeer deze pagina als gelezen",
+    "menu.mark_next_as_read": "Markeer de volgende als gelezen",
     "menu.preferences": "Voorkeuren",
     "menu.refresh_all_feeds": "Vernieuw alle feeds in de achtergrond",
     "menu.refresh_feed": "Vernieuwen",

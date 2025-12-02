@@ -668,6 +668,33 @@ function markPageAsReadAction() {
 }
 
 /**
+ * Mark the first visible unread entry on the current page as read.
+ */
+function markNextEntryAsReadAction() {
+    const items = getVisibleEntries();
+    if (items.length === 0) return;
+
+    const nextEntry = items[0];
+    const buttonElement = nextEntry.querySelector(":is(a, button)[data-toggle-status]");
+    if (!buttonElement || buttonElement.dataset.value === "read") return;
+
+    const entryID = parseInt(nextEntry.dataset.id, 10);
+    if (Number.isNaN(entryID)) return;
+
+    setButtonToLoadingState(buttonElement);
+
+    updateEntriesStatus([entryID], "read", () => {
+        setReadStatusButtonState(buttonElement, "read");
+        nextEntry.classList.remove("item-status-unread");
+        nextEntry.classList.add("item-status-read");
+
+        if (isListView() && getVisibleEntries().length === 0) {
+            window.location.reload();
+        }
+    });
+}
+
+/**
  * Handle entry status changes from the list view and entry view.
  * Focus the next or the previous entry if it exists.
  *
@@ -1495,6 +1522,7 @@ function initializeClickHandlers() {
 
     // Page actions with confirmation
     onClick(":is(a, button)[data-action=markPageAsRead]", (event) => handleConfirmationMessage(event.target, markPageAsReadAction));
+    onClick(":is(a, button)[data-action=markNextEntryAsRead]", () => markNextEntryAsReadAction());
 
     // Generic confirmation handler
     onClick(":is(a, button)[data-confirm]", (event) => {

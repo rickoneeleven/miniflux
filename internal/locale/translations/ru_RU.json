@@ -411,6 +411,7 @@
     "menu.logout": "Выйти",
     "menu.mark_all_as_read": "Отметить всё как прочитанное",
     "menu.mark_page_as_read": "Отметить эту страницу прочитанной",
+    "menu.mark_next_as_read": "Отметить следующую как прочитанную",
     "menu.preferences": "Предпочтения",
     "menu.refresh_all_feeds": "Обновить все подписки в фоне",
     "menu.refresh_feed": "Обновить",

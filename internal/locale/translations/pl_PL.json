@@ -411,6 +411,7 @@
     "menu.logout": "Wyloguj się",
     "menu.mark_all_as_read": "Oznacz wszystkie jako przeczytane",
     "menu.mark_page_as_read": "Oznacz jako przeczytane",
+    "menu.mark_next_as_read": "Oznacz następny jako przeczytany",
     "menu.preferences": "Preferencje",
     "menu.refresh_all_feeds": "Odśwież w tle wszystkie subskrypcje",
     "menu.refresh_feed": "Odśwież",

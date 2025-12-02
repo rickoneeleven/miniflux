@@ -31,6 +31,13 @@
             <li>
                 <button
                     class="page-button"
+                    data-action="markNextEntryAsRead"
+                    data-label-loading="{{ t "confirm.loading" }}"
+                >{{ icon "mark-page-as-read" }}{{ t "menu.mark_next_as_read" }}</button>
+            </li>
+            <li>
+                <button
+                    class="page-button"
                     data-confirm="true"
                     data-url="{{ route "markAllAsRead" }}"
                     data-redirect-url="{{ route "unread" }}"

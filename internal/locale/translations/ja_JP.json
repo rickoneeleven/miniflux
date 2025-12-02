@@ -405,6 +405,7 @@
     "menu.logout": "ログアウト",
     "menu.mark_all_as_read": "すべて既読にする",
     "menu.mark_page_as_read": "このページを既読にする",
+    "menu.mark_next_as_read": "次を既読にする",
     "menu.preferences": "設定情報",
     "menu.refresh_all_feeds": "すべてのフィードをバックグラウンドで更新",
     "menu.refresh_feed": "更新",

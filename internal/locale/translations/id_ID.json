@@ -405,6 +405,7 @@
     "menu.logout": "Keluar",
     "menu.mark_all_as_read": "Tandai semua sebagai telah dibaca",
     "menu.mark_page_as_read": "Tandai halaman ini sebagai telah dibaca",
+    "menu.mark_next_as_read": "Tandai berikutnya sebagai telah dibaca",
     "menu.preferences": "Preferensi",
     "menu.refresh_all_feeds": "Muat ulang semua umpan di latar belakang",
     "menu.refresh_feed": "Muat ulang",

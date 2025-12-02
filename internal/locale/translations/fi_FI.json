@@ -408,6 +408,7 @@
     "menu.logout": "Kirjaudu ulos",
     "menu.mark_all_as_read": "Merkitse kaikki luetuksi",
     "menu.mark_page_as_read": "Merkitse tämä sivu luetuksi",
+    "menu.mark_next_as_read": "Merkitse seuraava luetuksi",
     "menu.preferences": "Asetukset",
     "menu.refresh_all_feeds": "Päivitä kaikki syötteet taustalla",
     "menu.refresh_feed": "Päivitä",

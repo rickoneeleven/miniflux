@@ -408,6 +408,7 @@
     "menu.logout": "Esci",
     "menu.mark_all_as_read": "Segna tutti gli articoli come letti",
     "menu.mark_page_as_read": "Segna questa pagina come letta",
+    "menu.mark_next_as_read": "Segna il prossimo come letto",
     "menu.preferences": "Preferenze",
     "menu.refresh_all_feeds": "Aggiorna tutti i feed in background",
     "menu.refresh_feed": "Aggiorna",

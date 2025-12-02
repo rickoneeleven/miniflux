@@ -408,6 +408,7 @@
     "menu.logout": "Çıkış",
     "menu.mark_all_as_read": "Tümünü okundu olarak işaretle",
     "menu.mark_page_as_read": "Bu sayfayı okundu olarak işaretle",
+    "menu.mark_next_as_read": "Sonrakini okundu olarak işaretle",
     "menu.preferences": "Tercihler",
     "menu.refresh_all_feeds": "Tüm beslemeleri arka planda yenile",
     "menu.refresh_feed": "Yenile",

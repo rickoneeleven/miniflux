@@ -408,6 +408,7 @@
     "menu.logout": "लॉग आउट",
     "menu.mark_all_as_read": "सभी को पढ़ा हुआ मार्क करें",
     "menu.mark_page_as_read": "इस पृष्ठ को पढ़ा हुआ चिह्नित करें",
+    "menu.mark_next_as_read": "अगले को पढ़ा हुआ चिह्नित करें",
     "menu.preferences": "पसंद",
     "menu.refresh_all_feeds": "पृष्ठभूमि में सभी फ़ीड को ताज़ा करें",
     "menu.refresh_feed": "ताज़ा करें",

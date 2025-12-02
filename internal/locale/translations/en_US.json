@@ -408,6 +408,7 @@
     "menu.logout": "Logout",
     "menu.mark_all_as_read": "Mark all as read",
     "menu.mark_page_as_read": "Mark this page as read",
+    "menu.mark_next_as_read": "Mark next as read",
     "menu.preferences": "Preferences",
     "menu.refresh_all_feeds": "Refresh all feeds in the background",
     "menu.refresh_feed": "Refresh",

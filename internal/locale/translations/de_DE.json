@@ -408,6 +408,7 @@
     "menu.logout": "Abmelden",
     "menu.mark_all_as_read": "Alle als gelesen markieren",
     "menu.mark_page_as_read": "Diese Seite als gelesen markieren",
+    "menu.mark_next_as_read": "N\u00e4chsten Eintrag als gelesen markieren",
     "menu.preferences": "Einstellungen",
     "menu.refresh_all_feeds": "Alle Abonnements im Hintergrund aktualisieren",
     "menu.refresh_feed": "Aktualisieren",

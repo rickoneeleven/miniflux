@@ -411,6 +411,7 @@
     "menu.logout": "Вийти",
     "menu.mark_all_as_read": "Відмітити все як прочитане",
     "menu.mark_page_as_read": "Відмітити цю сторінку як прочитане",
+    "menu.mark_next_as_read": "Відмітити наступне як прочитане",
     "menu.preferences": "Уподобання",
     "menu.refresh_all_feeds": "Оновити всі стрічки у фоновому режимі",
     "menu.refresh_feed": "Оновити",
