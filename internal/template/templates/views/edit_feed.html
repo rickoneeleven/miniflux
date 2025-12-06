@@ -79,6 +79,20 @@
         </fieldset>
 
         <fieldset>
+            <legend>{{ t "form.feed.fieldset.scheduling" }}</legend>
+
+            <label for="form-polling-priority">{{ t "form.feed.label.polling_priority" }}</label>
+            <select id="form-polling-priority" name="polling_priority">
+                <option value="aggressive" {{ if or (eq .form.PollingPriority "aggressive") (eq .form.PollingPriority "") }}selected{{ end }}>{{ t "form.feed.label.polling_priority_aggressive" }}</option>
+                <option value="normal" {{ if eq .form.PollingPriority "normal" }}selected{{ end }}>{{ t "form.feed.label.polling_priority_normal" }}</option>
+            </select>
+
+            <div class="buttons">
+                <button type="submit" class="button button-primary" data-label-loading="{{ t "form.submit.saving" }}">{{ t "action.update" }}</button>
+            </div>
+        </fieldset>
+
+        <fieldset>
             <legend>{{ t "form.feed.fieldset.network_settings" }}</legend>
 
             <label for="form-feed-username">{{ t "form.feed.label.feed_username" }}</label>

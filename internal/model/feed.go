@@ -20,6 +20,12 @@ const (
 	DefaultFeedSortingDirection = "desc"
 )
 
+// Polling priority options for per-feed scheduling.
+const (
+	PollingPriorityAggressive = "aggressive"
+	PollingPriorityNormal     = "normal"
+)
+
 // Feed represents a feed in the application.
 type Feed struct {
 	ID                          int64     `json:"id"`
@@ -61,6 +67,7 @@ type Feed struct {
 	NtfyTopic                   string    `json:"ntfy_topic"`
 	PushoverPriority            int       `json:"pushover_priority"`
 	ProxyURL                    string    `json:"proxy_url"`
+	PollingPriority             string    `json:"polling_priority"`
 
 	// Non-persisted attributes
 	Category *Category `json:"category,omitempty"`
@@ -119,8 +126,16 @@ func (f *Feed) CheckedNow() {
 
 // ScheduleNextCheck set "next_check_at" of a feed based on the scheduler selected from the configuration.
 func (f *Feed) ScheduleNextCheck(weeklyCount int, refreshDelay time.Duration) time.Duration {
-	// Default to the global config Polling Frequency.
-	interval := config.Opts.SchedulerRoundRobinMinInterval()
+	var interval time.Duration
+
+	if f.PollingPriority == PollingPriorityNormal {
+		interval = 60 * time.Minute
+		f.NextCheckAt = time.Now().Add(interval)
+		return interval
+	}
+
+	// Default to the global config Polling Frequency (aggressive mode).
+	interval = config.Opts.SchedulerRoundRobinMinInterval()
 
 	if config.Opts.PollingScheduler() == SchedulerEntryFrequency {
 		if weeklyCount <= 0 {
@@ -133,11 +148,9 @@ func (f *Feed) ScheduleNextCheck(weeklyCount int, refreshDelay time.Duration) ti
 	}
 
 	if config.Opts.PollingRespectFeedTTL() {
-		// Use the RSS TTL field, Retry-After, Cache-Control or Expires HTTP headers if defined.
 		interval = max(interval, refreshDelay)
 	}
 
-	// Limit the max interval value for misconfigured feeds.
 	switch config.Opts.PollingScheduler() {
 	case SchedulerRoundRobin:
 		interval = min(interval, config.Opts.SchedulerRoundRobinMaxInterval())
@@ -173,6 +186,7 @@ type FeedCreationRequest struct {
 	KeepFilterEntryRules        string `json:"keep_filter_entry_rules"`
 	UrlRewriteRules             string `json:"urlrewrite_rules"`
 	ProxyURL                    string `json:"proxy_url"`
+	PollingPriority             string `json:"polling_priority"`
 }
 
 type FeedCreationRequestFromSubscriptionDiscovery struct {
@@ -210,6 +224,7 @@ type FeedModificationRequest struct {
 	HideGlobally                *bool   `json:"hide_globally"`
 	DisableHTTP2                *bool   `json:"disable_http2"`
 	ProxyURL                    *string `json:"proxy_url"`
+	PollingPriority             *string `json:"polling_priority"`
 }
 
 // Patch updates a feed with modified values.
@@ -312,6 +327,10 @@ func (f *FeedModificationRequest) Patch(feed *Feed) {
 
 	if f.ProxyURL != nil {
 		feed.ProxyURL = *f.ProxyURL
+	}
+
+	if f.PollingPriority != nil {
+		feed.PollingPriority = *f.PollingPriority
 	}
 }
 
