@@ -1,6 +1,6 @@
 # Miniflux deployment: rss.pinescore.com
 
-DATETIME of last agent review: 27/11/2025 16:45 GMT
+DATETIME of last agent review: 07 Dec 2025 10:45 (Europe/London)
 
 ## Host and runtime
 - OS: Debian 12 (bookworm) with Virtualmin/Apache managing `rss.pinescore.com`.
@@ -40,6 +40,7 @@ DATETIME of last agent review: 27/11/2025 16:45 GMT
   - `SCHEDULER_ROUND_ROBIN_MIN_INTERVAL=1`
   - `POLLING_LIMIT_PER_HOST=2`
   - `POLLING_RESPECT_FEED_TTL=0`
+  - `POLLING_PARSING_ERROR_LIMIT=0` (disabled; custom backoff handles failures instead)
 - Recommended hardening after first login:
   - Change the admin password in the UI (already done).
   - Edit `/etc/miniflux.conf` to remove `ADMIN_PASSWORD` and set `CREATE_ADMIN=0`.
@@ -52,6 +53,11 @@ DATETIME of last agent review: 27/11/2025 16:45 GMT
   - Host protection: `POLLING_LIMIT_PER_HOST=2` (at most 2 feeds per host per batch).
   - TTL override: `POLLING_RESPECT_FEED_TTL=0` (ignores RSS TTL, Retry-After, Cache-Control, and Expires when computing `next_check_at`).
 - Operational effect: feeds are refreshed on a roughly one-minute cadence in practice, with only a small amount of jitter relative to the UI countdown; this is intentional for this single-user deployment and may increase load on upstream providers compared to upstream defaults.
+
+### Feed error handling
+- `POLLING_PARSING_ERROR_LIMIT=0` disables the upstream behaviour of excluding feeds after N consecutive errors.
+- Custom backoff: when a feed fails, `next_check_at` is set using exponential backoff based on `parsing_error_count` (e.g. 2^n minutes, capped at 60 minutes). On success, error count resets and normal 1-minute schedule resumes.
+- Dynamic error indicator: the unread page polls `/unread/snapshot` every 10 seconds; the response includes `count_error_feeds` which updates the Feeds menu error counter without page reload.
 
 ## Systemd service
 - Unit file: `/etc/systemd/system/miniflux.service` (copied from `packaging/systemd/miniflux.service` and adjusted).

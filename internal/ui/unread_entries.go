@@ -20,6 +20,7 @@ type unreadSnapshotResponse struct {
 	UnreadCount         int           `json:"unread_count"`
 	LastGlobalFeedCheck time.Time     `json:"last_global_feed_check"`
 	Entries             model.Entries `json:"entries"`
+	CountErrorFeeds     int           `json:"count_error_feeds"`
 }
 
 func (h *handler) showUnreadPage(w http.ResponseWriter, r *http.Request) {
@@ -116,5 +117,6 @@ func (h *handler) unreadSnapshot(w http.ResponseWriter, r *http.Request) {
 		UnreadCount:         countUnread,
 		LastGlobalFeedCheck: lastGlobalFeedCheck,
 		Entries:             entries,
+		CountErrorFeeds:     h.store.CountUserFeedsWithErrors(user.ID),
 	})
 }

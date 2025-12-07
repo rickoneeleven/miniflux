@@ -1074,6 +1074,7 @@ function initializeUnreadSnapshotPolling() {
 
     let lastUnreadCount = null;
     let lastGlobalFeedCheck = null;
+    let lastErrorFeedsCount = null;
 
     function updateUnreadCounters(unreadCount) {
         document.querySelectorAll("span.unread-counter").forEach((element) => {
@@ -1115,6 +1116,27 @@ function initializeUnreadSnapshotPolling() {
 
         timeElement.textContent = formatted;
         timeElement.title = formatted;
+    }
+
+    function updateErrorFeedsCounter(count) {
+        const feedsLink = document.querySelector('a[data-page="feeds"]');
+        if (!feedsLink) return;
+
+        let wrapper = feedsLink.querySelector(".error-feeds-counter-wrapper");
+
+        if (count > 0) {
+            if (wrapper) {
+                const counter = wrapper.querySelector(".error-feeds-counter");
+                if (counter) counter.textContent = count.toString();
+            } else {
+                wrapper = document.createElement("span");
+                wrapper.className = "error-feeds-counter-wrapper";
+                wrapper.innerHTML = "(<span class=\"error-feeds-counter\">" + count + "</span>)";
+                feedsLink.appendChild(wrapper);
+            }
+        } else if (wrapper) {
+            wrapper.remove();
+        }
     }
 
     async function fetchAndInjectNewItems() {
@@ -1210,6 +1232,11 @@ function initializeUnreadSnapshotPolling() {
             if (snapshot.last_global_feed_check && snapshot.last_global_feed_check !== lastGlobalFeedCheck) {
                 lastGlobalFeedCheck = snapshot.last_global_feed_check;
                 updateLastFetch(lastGlobalFeedCheck);
+            }
+
+            if (typeof snapshot.count_error_feeds === "number" && snapshot.count_error_feeds !== lastErrorFeedsCount) {
+                lastErrorFeedsCount = snapshot.count_error_feeds;
+                updateErrorFeedsCounter(lastErrorFeedsCount);
             }
         } catch (error) {
             // Ignore polling errors to avoid breaking the UI.

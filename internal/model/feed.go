@@ -104,9 +104,16 @@ func (f *Feed) WithCategoryID(categoryID int64) {
 }
 
 // WithTranslatedErrorMessage adds a new error message and increment the error counter.
+// Also applies exponential backoff to NextCheckAt based on error count.
 func (f *Feed) WithTranslatedErrorMessage(message string) {
 	f.ParsingErrorCount++
 	f.ParsingErrorMsg = message
+
+	backoffMinutes := 1 << f.ParsingErrorCount
+	if backoffMinutes > 60 {
+		backoffMinutes = 60
+	}
+	f.NextCheckAt = time.Now().Add(time.Duration(backoffMinutes) * time.Minute)
 }
 
 // ResetErrorCounter removes all previous errors.
