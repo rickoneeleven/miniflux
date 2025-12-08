@@ -66,12 +66,6 @@
                     >{{ icon "save" }}<span class="icon-label">{{ t "entry.save.label" }}</span></button>
             </li>
         {{ end -}}
-        <li class="item-meta-icons-external-url">
-            <a href="{{ .entry.URL | safeURL  }}"
-                aria-describedby="entry-title-{{ .entry.ID }}"
-                {{ if $.user.OpenExternalLinksInNewTab }}target="_blank"{{ else }}rel="noopener"{{ end }}
-                data-original-link="{{ .user.MarkReadOnView }}">{{ icon "external-link" }}<span class="icon-label">{{ t "entry.external_link.label" }}</span></a>
-        </li>
         {{ if .entry.CommentsURL }}
             <li class="item-meta-icons-comments">
                 <a href="{{ .entry.CommentsURL | safeURL  }}"

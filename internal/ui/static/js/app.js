@@ -2,6 +2,9 @@
 const TOP = 9999;
 const BOTTOM = -9999;
 
+// Counter for mark-next-as-read actions; forces page refresh every 10 to resync unread counts
+let markNextAsReadCounter = 0;
+
 // Simple Polyfill for browsers that don't support Trusted Types
 // See https://caniuse.com/?search=trusted%20types
 const globalTrustedTypes = window.trustedTypes;
@@ -688,7 +691,8 @@ function markNextEntryAsReadAction() {
         nextEntry.classList.remove("item-status-unread");
         nextEntry.classList.add("item-status-read");
 
-        if (isListView() && getVisibleEntries().length === 0) {
+        markNextAsReadCounter++;
+        if (markNextAsReadCounter >= 10 || (isListView() && getVisibleEntries().length === 0)) {
             window.location.reload();
         }
     });
@@ -1550,6 +1554,16 @@ function initializeClickHandlers() {
     // Page actions with confirmation
     onClick(":is(a, button)[data-action=markPageAsRead]", (event) => handleConfirmationMessage(event.target, markPageAsReadAction));
     onClick(":is(a, button)[data-action=markNextEntryAsRead]", () => markNextEntryAsReadAction());
+
+    // Title link clicks mark entry as read (noPreventDefault=true to allow link navigation)
+    onClick("a[data-title-external-link]", (event) => {
+        const entry = findEntry(event.target);
+        if (entry && entry.classList.contains("item-status-unread")) {
+            entry.classList.replace("item-status-unread", "item-status-read");
+            const entryID = parseInt(entry.dataset.id, 10);
+            updateEntriesStatus([entryID], "read");
+        }
+    }, true);
 
     // Generic confirmation handler
     onClick(":is(a, button)[data-confirm]", (event) => {

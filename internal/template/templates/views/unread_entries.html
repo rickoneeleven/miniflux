@@ -21,16 +21,6 @@
             <li>
                 <button
                     class="page-button"
-                    data-action="markPageAsRead"
-                    data-show-only-unread="1"
-                    data-label-question="{{ t "confirm.question" }}"
-                    data-label-yes="{{ t "confirm.yes" }}"
-                    data-label-no="{{ t "confirm.no" }}"
-                    data-label-loading="{{ t "confirm.loading" }}">{{ icon "mark-page-as-read" }}{{ t "menu.mark_page_as_read" }}</button>
-            </li>
-            <li>
-                <button
-                    class="page-button"
                     data-action="markNextEntryAsRead"
                     data-label-loading="{{ t "confirm.loading" }}"
                 >{{ icon "mark-page-as-read" }}{{ t "menu.mark_next_as_read" }}</button>
@@ -69,7 +59,7 @@
         >
             <header class="item-header" dir="auto">
                 <h2 id="entry-title-{{ .ID }}" class="item-title">
-                    <a href="{{ route "unreadEntry" "entryID" .ID }}">
+                    <a href="{{ .URL | safeURL }}" target="_blank" data-title-external-link="true">
                         {{ if ne .Feed.Icon.IconID 0 -}}
                         <img src="{{ route "feedIcon" "externalIconID" .Feed.Icon.ExternalIconID }}" width="16" height="16" loading="lazy" alt="">
                         {{ end -}}
@@ -86,24 +76,6 @@
         </article>
         {{ end }}
     </div>
-    <section class="page-footer">
-        {{ if .entries }}
-        <ul>
-            <li>
-                <button
-                    class="page-button"
-                    data-action="markPageAsRead"
-                    data-label-question="{{ t "confirm.question" }}"
-                    data-label-yes="{{ t "confirm.yes" }}"
-                    data-label-no="{{ t "confirm.no" }}"
-                    data-label-loading="{{ t "confirm.loading" }}"
-                >
-                    {{ icon "mark-page-as-read" }}{{ t "menu.mark_page_as_read" }}
-                </button>
-            </li>
-        </ul>
-        {{ end }}
-    </section>
     <div class="pagination-bottom">
         {{ template "pagination" .pagination }}
     </div>

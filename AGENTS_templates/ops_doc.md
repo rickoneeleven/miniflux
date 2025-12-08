@@ -24,6 +24,9 @@ One sentence describing what this component does.
 - `ops/OTHER_DOC.md` - if cross-cutting dependency
 - `ops/systemd/service-name.service` - if applicable
 
+## Agent Service Commands
+- any commands that will help the agent do stuff related to operations in this doc
+
 ## Notes
 - Optional 1-2 bullets only if critical context not obvious from code
 - Delete this section if empty
@@ -48,13 +51,20 @@ Rootless systemd user services for backend, ingestion, and enrichment workers.
 - `ops/systemd/polyscore-commenter-age.service` + `.timer` - trade age lookup
 - `ops/systemd/polyscore-commenter-pnl.service` + `.timer` - PnL enrichment
 
+## Agent Service Commands
+User services require environment variables to access the systemd bus:
+\`\`\`bash
+XDG_RUNTIME_DIR=/run/user/1001 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1001/bus systemctl --user restart polyscore-backend
+XDG_RUNTIME_DIR=/run/user/1001 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1001/bus systemctl --user status polyscore-backend
+\`\`\`
+
 ## Notes
 - `polyscore-comments` runs as system service (not user) at `/etc/systemd/system/`
 - Requires `loginctl enable-linger $USER`
+- User ID 1001 = loopnova
 ```
 
-**Why it works:** 15 lines. Agent knows what services exist, where unit files live. Reads `.service` files when implementing changes.
-
+**Why it works:** Agent knows what services exist, where unit files live, and how to restart them. Reads `.service` files when implementing changes.
 ---
 
 ## Bad Example: SYSTEMD_USER.md (verbose)
